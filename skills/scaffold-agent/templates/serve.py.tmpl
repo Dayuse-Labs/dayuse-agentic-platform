@@ -1,0 +1,16 @@
+"""serve.py — exposes {{AGENT_NAME}} over A2A.
+
+to_a2a() generates the Agent Card and returns an ASGI application served by uvicorn;
+the Agent Card is published at /.well-known/agent-card.json.
+
+If the to_a2a import differs in the installed ADK version, confirm the path via
+agents-cli / Context7. Alternative: `adk api_server --a2a` with the provided agent-card.json.
+"""
+import os
+
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
+
+from {{AGENT_NAME}}.agent import root_agent
+
+# Listens on $PORT (default 8080): required by Cloud Run, compatible with k8s/Knative.
+app = to_a2a(root_agent, port=int(os.environ.get("PORT", "8080")))

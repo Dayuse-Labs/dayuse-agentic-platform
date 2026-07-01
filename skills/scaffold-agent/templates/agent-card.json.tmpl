@@ -1,0 +1,35 @@
+{
+  "name": "{{AGENT_NAME}}",
+  "description": "{{AGENT_DESCRIPTION}}",
+  "version": "0.1.0",
+  "url": "${AGENT_PUBLIC_URL}",
+  "provider": {
+    "organization": "Dayuse",
+    "url": "https://dayuse.com"
+  },
+  "capabilities": {
+    "streaming": true
+  },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": [
+    {
+      "id": "{{AGENT_NAME}}",
+      "name": "{{AGENT_NAME}}",
+      "description": "{{AGENT_DESCRIPTION}}",
+      "tags": ["dayuse"]
+    }
+  ],
+  "securitySchemes": {
+    "dayuse-oidc": {
+      "type": "openIdConnect",
+      "openIdConnectUrl": "${DAYUSE_OIDC_ISSUER}/.well-known/openid-configuration"
+    },
+    "mtls": {
+      "type": "mutualTLS"
+    }
+  },
+  "security": [
+    { "dayuse-oidc": [], "mtls": [] }
+  ]
+}

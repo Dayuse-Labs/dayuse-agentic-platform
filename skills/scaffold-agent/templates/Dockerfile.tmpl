@@ -1,0 +1,21 @@
+# {{AGENT_NAME}} — portable OCI image (Cloud Run, k8s/Knative, dev). Zero cloud dependency.
+# Tag pinning is intentional (3.12 receives security patches). For a reproducible prod build,
+# resolve the digest via the lockfile/CI rather than freezing it here (otherwise stale base).
+FROM python:3.12-slim AS base
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# The container starts without a cloud metadata server and listens on $PORT.
+ENV PORT=8080
+EXPOSE 8080
+# Run as a non-root user.
+RUN useradd --create-home --uid 10001 appuser
+USER appuser
+
+CMD ["sh", "-c", "uvicorn serve:app --host 0.0.0.0 --port ${PORT}"]

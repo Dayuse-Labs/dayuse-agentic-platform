@@ -1,0 +1,12 @@
+# {{AGENT_NAME}} — dependencies. No cloud SDK by default (portability).
+# Pinned with compatible-release (~=): patches/minors OK, major blocked (supply-chain
+# security). After `pip install`, freeze a lockfile for prod: `pip freeze > requirements.lock`.
+google-adk~=2.3
+litellm~=1.90
+uvicorn~=0.49
+
+# Pluggable identity — install according to DAYUSE_IDENTITY_PROVIDER (pin likewise):
+#   oidc-mtls : authlib, httpx
+#   spire     : py-spiffe
+# gcp-agent-identity is OPTIONAL and outside the base image: add it ONLY for an
+# explicit GCP deployment, never as a default dependency.

@@ -1,0 +1,34 @@
+# {{AGENT_NAME}} — Kubernetes/Knative (self-hostable prod target). Same image as Cloud Run.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: {{AGENT_NAME}}
+  namespace: dayuse-agents
+  labels:
+    app: {{AGENT_NAME}}
+    dayuse.io/portable: "true"
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "20"
+    spec:
+      containerConcurrency: 80
+      containers:
+        - image: {{IMAGE}}              # ${DAYUSE_REGISTRY}/agents/{{AGENT_NAME}}:{{TAG}}
+          ports:
+            - containerPort: 8080       # the agent listens on $PORT
+          env:
+            - name: DAYUSE_MODEL
+              value: anthropic/claude-sonnet-4-6
+            - name: DAYUSE_IDENTITY_PROVIDER
+              value: oidc-mtls
+            # Secrets via k8s Secret / Vault Agent Injector, never in cleartext.
+            # - name: ANTHROPIC_API_KEY
+            #   valueFrom: { secretKeyRef: { name: agent-secrets, key: anthropic_api_key } }
+          resources:
+            requests: { cpu: "250m", memory: 256Mi }
+            limits:   { cpu: "1",    memory: 512Mi }
+# Variant without Knative: a classic k8s Deployment + Service also works
+# (the agent listens on $PORT); keep the same image and the same environment variables.

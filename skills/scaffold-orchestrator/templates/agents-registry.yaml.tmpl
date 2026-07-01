@@ -1,0 +1,34 @@
+# agents-registry.yaml — deployed A2A leaf agents, shared across orchestrators.
+# Single source of truth for "reuse before create":
+#   - scaffold-orchestrator (Step 2) READS this to find a reusable leaf before scaffolding one.
+#   - wire-a2a (Step 7) APPENDS an entry here when a new leaf is exposed (commit via HITL).
+# Lives at the ROOT of the agentic platform repo, versioned on GitLab.
+#
+# Bootstrap (day one): if this file does not exist yet, copy this template to the repo root
+# and keep the empty `agents:` list below — the ecosystem starts empty; entries are added
+# by wire-a2a as leaves get exposed.
+#
+# Schema per entry:
+#   name         snake_case agent name (matches the leaf's package / Agent Card name)
+#   description  one line; the capability the leaf provides (used for the reuse lookup)
+#   card_url     public Agent Card URL (.../.well-known/agent-card.json)
+#   env          env var the orchestrator reads card_url from (never hard-code the URL)
+#   owner        owning team
+#   writes       true if the leaf performs external writes (MR/issue/Notion) => caller needs HITL
+
+agents: []
+
+# --- Example (delete once you register your first real leaf) -------------------------------
+# agents:
+#   - name: spec_generator
+#     description: Turns a signal (logs, ticket) into a spec.
+#     card_url: https://agents.dayuse.io/spec-generator/.well-known/agent-card.json
+#     env: SPEC_GENERATOR_CARD_URL
+#     owner: team-platform
+#     writes: false
+#   - name: mr_writer
+#     description: Writes and pushes a GitLab Merge Request.
+#     card_url: https://agents.dayuse.io/mr-writer/.well-known/agent-card.json
+#     env: MR_WRITER_CARD_URL
+#     owner: team-platform
+#     writes: true        # => mandatory HITL point at the calling orchestrator

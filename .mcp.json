@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${CONTEXT7_API_KEY}"
+      }
+    },
+    "adk-docs": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--from", "mcpdoc", "mcpdoc", "--urls", "AgentDevelopmentKit:https://adk.dev/llms.txt", "--transport", "stdio"],
+      "env": {}
+    }
+  }
+}

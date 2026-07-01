@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__gitlab__(create|update|delete|merge|accept|approve|close|reopen|add|set|edit|move|upload)_.*|mcp__notion__(create|update|delete|append|move|duplicate|comment|patch|archive|insert)_.*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Human-in-the-loop guardrail for the Dayuse agentic platform. Examine the following tool call: $TOOL_INPUT\n\nDetermine whether this is a WRITE OPERATION that modifies an external system — in particular: pushing / creating / updating / merging / approving a GitLab Merge Request; creating or modifying a GitLab issue; writing, editing, moving, duplicating or commenting on a Notion page; or writing files intended to be pushed to a repository.\n\nIf this is a write of that kind AND the human has NOT, in this turn, given explicit confirmation after seeing a preview (MR diff, issue title+body, Notion content): BLOCK. Briefly explain that human confirmation is required, present a preview of what would be written, and ask for explicit confirmation before retrying.\n\nIf this is a read, an operation with no external side effect, or if explicit confirmation has already been given for this specific write: ALLOW.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

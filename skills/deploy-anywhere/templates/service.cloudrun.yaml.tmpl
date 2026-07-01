@@ -1,0 +1,35 @@
+# {{AGENT_NAME}} — Cloud Run (TEST target; containers, non-blocking).
+# Cloud Run consumes the Knative Serving API. GCP stays a target, never a structuring
+# dependency: no GCP-only annotation essential to operation here.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: {{AGENT_NAME}}
+  labels:
+    app: {{AGENT_NAME}}
+    dayuse.io/portable: "true"
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - image: {{IMAGE}}              # ${DAYUSE_REGISTRY}/agents/{{AGENT_NAME}}:{{TAG}}
+          ports:
+            - name: http1
+              containerPort: 8080       # the agent listens on $PORT
+          env:
+            - name: DAYUSE_MODEL
+              value: anthropic/claude-sonnet-4-6
+            - name: DAYUSE_IDENTITY_PROVIDER
+              value: oidc-mtls
+            # Secrets (ANTHROPIC_API_KEY, tokens, broker): references to the secret
+            # manager, NEVER a cleartext value here. Deploy in an EU region.
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi

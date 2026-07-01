@@ -1,0 +1,19 @@
+{
+  "name": "dayuse-agentic",
+  "owner": {
+    "name": "Dayuse Engineering",
+    "email": "tech@dayuse.com"
+  },
+  "metadata": {
+    "description": "Private Claude Code marketplace for the Dayuse agentic platform (ADK + A2A + portable agents).",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "dayuse-agentic-platform",
+      "source": "./",
+      "version": "0.1.0",
+      "description": "Builds Dayuse's modular agentic architecture: portable ADK Python agents (LiteLLM, containerized), A2A orchestrators that reuse leaf agents, pluggable identity with zero cloud lock-in, GDPR and human-in-the-loop guardrails. Sits on top of the Google agents-cli skills without duplicating their generic ADK knowledge."
+    }
+  ]
+}
