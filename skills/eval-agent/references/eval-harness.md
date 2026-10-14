@@ -44,36 +44,35 @@ The `invariant-hitl-write` case must **fail** if the agent calls a write tool wi
 }
 ```
 
+## Decision-point eval — input files for `scripts/decision_eval.py`
+
+`question.json` — the exact question the agent sends:
+
+```json
+{
+  "name": "intent",
+  "type": "choice",
+  "instructions": "Which team should handle this customer message?",
+  "options": {
+    "booking": "Creating, changing or cancelling a booking",
+    "payment": "Charges, refunds, invoices",
+    "other": "Anything else"
+  }
+}
+```
+
+`cases.jsonl` — one labelled case per line (for a `noul` question, labels are `yes` / `no`):
+
+```json
+{"id": "c-001", "state": {"message": "Je veux décaler ma réservation à 15h"}, "label": "booking"}
+{"id": "c-002", "state": {"message": "On m'a débité deux fois"}, "label": "payment"}
+```
+
+The report never contains the state; `--raw` writes ids, labels, picks and confidences only.
+
 ## Static guardrail (zero lock-in) — `scripts/dayuse_guardrails.sh`
 
-> This script is **shipped ready to copy** at `${CLAUDE_PLUGIN_ROOT}/skills/eval-agent/scripts/dayuse_guardrails.sh`. Copy it into the project's `scripts/` rather than retyping it by hand from this block.
-
-```bash
-#!/usr/bin/env bash
-# Fails if the code introduces a forbidden dependency. Run in CI + locally.
-set -euo pipefail
-root="${1:-.}"
-fail=0
-
-# 1) gcp_agent_identity imported outside the get_identity_provider factory
-if grep -rn --include='*.py' 'gcp_agent_identity' "$root" \
-   | grep -v 'provider.py' | grep -v 'gcp_agent_identity.py'; then
-  echo "ERROR: hard GCP dependency detected (gcp_agent_identity outside factory)."; fail=1
-fi
-
-# 2) cloud model SDK imported hardcoded instead of LiteLLM
-if grep -rn --include='*.py' -E 'import vertexai|from vertexai|import boto3.*bedrock' "$root"; then
-  echo "ERROR: hardcoded cloud model SDK — use LiteLLM instead."; fail=1
-fi
-
-# 3) the code must use LiteLlm
-if ! grep -rqn --include='*.py' 'LiteLlm' "$root"; then
-  echo "WARNING: no LiteLlm usage found — check the model provider."
-fi
-
-[ "$fail" -eq 0 ] && echo "Dayuse guardrails: OK"
-exit "$fail"
-```
+The script is **shipped ready to copy** at `${CLAUDE_PLUGIN_ROOT}/skills/eval-agent/scripts/dayuse_guardrails.sh` — copy the file, never retype it from a doc (an inline copy used to live here and drifted). What it fails on is listed in the `eval-agent` SKILL.md, Step 5.
 
 ## Snippet CI GitLab (`.gitlab-ci.yml`)
 
@@ -88,3 +87,17 @@ eval-agent:
 ```
 
 Wire this job into the `test` stage so no quality regression or forbidden dependency makes it into an MR.
+
+Decision-point eval — a **manual** job (paid calls, provider key from the CI secret store, never on every push):
+
+```yaml
+decision-eval:
+  image: python:3.12-slim
+  stage: test
+  when: manual
+  script:
+    - pip install --no-cache-dir "litellm>=1.105.0"
+    - python scripts/decision_eval.py --cases eval/cases.jsonl --question eval/question.json --out decision-report.md --no-personal-data
+  artifacts:
+    paths: [decision-report.md]
+```

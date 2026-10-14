@@ -14,7 +14,7 @@ metadata:
 
 # Dayuse agentic architecture
 
-Load this mental model before designing, scaffolding, or reviewing an agent or an orchestrator. It sets the vocabulary and the invariants; the other skills (`scaffold-agent`, `scaffold-orchestrator`, `wire-a2a`, `agent-identity`, `gdpr-guardrails`, `deploy-anywhere`, `eval-agent`) build on it.
+Load this mental model before designing, scaffolding, or reviewing an agent or an orchestrator. It sets the vocabulary and the invariants; the other skills (`scaffold-agent`, `scaffold-orchestrator`, `wire-a2a`, `agent-identity`, `gdpr-guardrails`, `decision-models`, `deploy-anywhere`, `eval-agent`) build on it.
 
 ## Founding invariant
 
@@ -41,7 +41,7 @@ Before scaffolding, **always** check whether an equivalent leaf already exists (
 
 Every Dayuse agent is portable because no layer depends hard on a cloud. From the bottom up:
 
-1. **Model** — always via **LiteLLM**. We keep Claude behind it, but the code never references a proprietary model SDK. Changing provider = changing an env variable, not the code.
+1. **Model** — always via **LiteLLM**. We keep Claude behind it, but the code never references a proprietary model SDK. Changing provider = changing an env variable, not the code. Two kinds of model live in this layer: **generative** (ADK `LiteLlm`, `DAYUSE_MODEL`) and **decision** (System One: closed questions answered with probabilities, `litellm.asystemone`, pinned `DAYUSE_DECISION_MODEL`, branch chosen in code). See the `decision-models` skill.
 2. **Execution** — **OCI container systematically**. Supported targets: **Cloud Run** (= containers, non-blocking) and **Kubernetes/Knative**. No proprietary cloud API in the agent code.
 3. **Coordination** — **A2A** (orchestrator→leaves, signed Agent Cards) + **MCP** (agent→tools: GitLab, Notion, logs, MySQL, Elasticsearch, RabbitMQ, Sentry…). The business MCP servers are wired into the agent, never into this plugin.
 4. **Identity & secrets** — pluggable **`AgentIdentityProvider`** interface (`oidc-mtls` by default, `spire`, optional `gcp-agent-identity`) + **token broker / Vault**: never a raw credential on the agent side.
@@ -69,6 +69,8 @@ Follow this order:
 1. Does the capability already exist as an A2A leaf? → **reuse** it (`scaffold-orchestrator`).
 2. Otherwise, does it meet ≥ 2 sharing criteria? → deployed **leaf agent** (`scaffold-agent` then `wire-a2a`).
 3. Otherwise → **inline** in the orchestrator.
+
+Inside an agent or an orchestrator, a step whose answer is a **closed set** (routing, gating a tool call, triage) → try a **decision model with a policy in code** before an `LlmAgent` (`decision-models`).
 
 Concrete orchestration patterns (sequential, parallel, routing, spec↔eval loop): see `references/orchestrator-patterns.md`.
 
