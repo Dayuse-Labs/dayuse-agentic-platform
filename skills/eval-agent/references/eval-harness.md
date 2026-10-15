@@ -80,13 +80,26 @@ The script is **shipped ready to copy** at `${CLAUDE_PLUGIN_ROOT}/skills/eval-ag
 eval-agent:
   image: python:3.12-slim
   stage: test
+  variables:
+    LITELLM_LOCAL_MODEL_COST_MAP: "True"   # bundled cost map, no download at import
   script:
-    - pip install --no-cache-dir google-adk litellm
+    - pip install --no-cache-dir -r requirements.txt
+    # ADK's eval module WITHOUT google-adk[eval]: its google-cloud-aiplatform[evaluation]
+    # requires litellm<1.86. Same pieces as the venvs that ran the fleet's evals (Spike A,
+    # 2026-10-14). Eval-time only: never add them to requirements.txt (no GCP SDK in the image).
+    - pip install --no-cache-dir google-cloud-aiplatform==1.161.0 rouge-score pandas tabulate gepa
     - bash scripts/dayuse_guardrails.sh .
-    - adk eval . {{AGENT_NAME}}.evalset.json --config_file_path test_config.json
+    # The package, not its parent (nested layout: <agent_name>/<agent_name>/agent.py).
+    - adk eval {{AGENT_NAME}} {{AGENT_NAME}}.evalset.json --config_file_path test_config.json
 ```
 
 Wire this job into the `test` stage so no quality regression or forbidden dependency makes it into an MR.
+
+Evidence for the install line:
+
+- **Proven** (Spike A, 2026-10-14, Linux aarch64, Python 3.12): with these pieces next to `google-adk[a2a]`, `adk eval` ran the fleet's hermetic evalsets — mr_commenter 3/3, mr_review 5/5 — on ADK 2.4.0 + litellm 1.90.2 and on ADK 2.12.0 + litellm 1.105.1.
+- **Not proven**: the fleet's own CI jobs that run `adk eval` (`mr-commenter-tests`, `mr-review-tests`) install the agent's `requirements.txt` (`google-adk[a2a]`, no eval pieces) and the shared lib, then `adk eval`. Whether they pass in CI: **to collect**. In a fresh environment that install answers `Eval module is not installed`.
+- Not run in x86_64 (the CI and Railway architecture): **to collect**.
 
 Decision-point eval — a **manual** job (paid calls, provider key from the CI secret store, never on every push):
 

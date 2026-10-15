@@ -2,11 +2,13 @@
 name: eval-agent
 description: >
   Sets up the ADK evaluation harness for a Dayuse agent/orchestrator with a starter test
-  set. This skill triggers when a tech wants to "evaluate an agent", "create agent tests",
-  "an ADK evalset", "check agent quality", "evaluate a decision model", "set a confidence
-  threshold", or validate the Dayuse invariants (HITL, LiteLLM, zero GCP dependency).
-  Delegates the generic ADK harness to google-agents-cli-eval and adds the Dayuse cases,
-  the decision-point evaluation and the guardrails.
+  set, the decision-point evaluation and the static guardrails, delegating the generic ADK
+  harness to google-agents-cli-eval.
+  Use this skill when a tech wants to "evaluate an agent", "create agent tests", "an ADK
+  evalset", "check agent quality", "evaluate a decision model", "set a confidence
+  threshold", validate the Dayuse invariants (HITL, LiteLLM, zero GCP dependency), or when
+  `adk eval` answers "Eval module is not installed".
+  Do not use it for an agent's plain unit tests, which need no ADK harness.
 metadata:
   version: "0.1.0"
 ---
@@ -69,9 +71,13 @@ Define the thresholds (tool trajectory, response match) then run:
 adk eval <agent_path> <evalset.evalset.json> --config_file_path test_config.json
 ```
 
+`<agent_path>` is the agent **package** (the inner `<agent_name>/` of the scaffolded tree), not its parent: run it from the project root.
+
+**Install the eval module without `google-adk[eval]`.** `google-adk` and `google-adk[a2a]` do not ship it: in a fresh environment `adk eval` answers `Eval module is not installed`. The `[eval]` extra does not resolve with our LiteLLM either, because `google-cloud-aiplatform[evaluation]` requires `litellm<1.86`. What ran the fleet's evals (mr_commenter 3/3, mr_review 5/5, on ADK 2.4.0 and 2.12.0 — Spike A, 2026-10-14) is the pieces, installed separately: `google-cloud-aiplatform==1.161.0` **without** the extra, plus `rouge-score`, `pandas`, `tabulate` and `gepa`. They are eval-time dependencies: keep them out of the agent's `requirements.txt`, so the image carries no GCP SDK. Exact pins for the four others: **to collect** (observed in the spike venvs: rouge-score 0.1.2, tabulate 0.10.0, pandas 3.0.x, gepa 0.1.x).
+
 ## Step 7 — Wire into CI
 
-Wire the eval **and** the static guardrail into the GitLab CI (see the snippet in the reference) so no regression or forbidden dependency makes it into an MR. Every GitLab commit goes through HITL.
+Wire the eval **and** the static guardrail into the GitLab CI (see the snippet in the reference, which installs the eval module as in Step 6) so no regression or forbidden dependency makes it into an MR. Every GitLab commit goes through HITL.
 
 ## Resources
 

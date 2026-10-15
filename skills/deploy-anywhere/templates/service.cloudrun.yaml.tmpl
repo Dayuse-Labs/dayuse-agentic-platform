@@ -24,10 +24,13 @@ spec:
               containerPort: 8080       # the agent listens on $PORT
           env:
             - name: DAYUSE_MODEL
-              value: anthropic/claude-sonnet-4-6
+              value: openrouter/anthropic/claude-sonnet-5.5
             - name: DAYUSE_IDENTITY_PROVIDER
               value: oidc-mtls
-            # Secrets (ANTHROPIC_API_KEY, tokens, broker): references to the secret
+            - name: LITELLM_LOCAL_MODEL_COST_MAP   # bundled cost map, no download at import
+              value: "True"
+            # AGENT_PUBLIC_URL = this service's https run.app URL (A2A is https-only off loopback).
+            # Secrets (OPENROUTER_API_KEY, tokens, broker): references to the secret
             # manager, NEVER a cleartext value here. Deploy in an EU region.
           resources:
             limits:

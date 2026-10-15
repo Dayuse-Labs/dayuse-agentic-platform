@@ -51,3 +51,4 @@ When a new leaf is exposed (handled by `wire-a2a` Step 7):
 - Never duplicate a capability already present in the registry: reuse.
 - Any leaf with `writes: true` requires a HITL point at the orchestrator that calls it.
 - The card URL is resolved via an environment variable (never a hard-coded URL in the code).
+- The card URL is `https` (plain `http` only on loopback, in local development): ADK ≥ 2.7 refuses it otherwise. See `wire-a2a/references/agent-card-spec.md` § Transport.

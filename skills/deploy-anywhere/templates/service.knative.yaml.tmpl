@@ -21,12 +21,16 @@ spec:
             - containerPort: 8080       # the agent listens on $PORT
           env:
             - name: DAYUSE_MODEL
-              value: anthropic/claude-sonnet-4-6
+              value: openrouter/anthropic/claude-sonnet-5.5
             - name: DAYUSE_IDENTITY_PROVIDER
               value: oidc-mtls
+            - name: LITELLM_LOCAL_MODEL_COST_MAP   # bundled cost map, no download at import
+              value: "True"
+            # AGENT_PUBLIC_URL must be https (A2A is https-only off loopback): enable Knative
+            # cluster-local-domain-tls or expose through an https ingress (deploy-anywhere/targets.md).
             # Secrets via k8s Secret / Vault Agent Injector, never in cleartext.
-            # - name: ANTHROPIC_API_KEY
-            #   valueFrom: { secretKeyRef: { name: agent-secrets, key: anthropic_api_key } }
+            # - name: OPENROUTER_API_KEY
+            #   valueFrom: { secretKeyRef: { name: agent-secrets, key: openrouter_api_key } }
           resources:
             requests: { cpu: "250m", memory: 256Mi }
             limits:   { cpu: "1",    memory: 512Mi }

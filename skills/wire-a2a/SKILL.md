@@ -1,12 +1,16 @@
 ---
 name: wire-a2a
 description: >
-  Exposes an existing ADK agent over A2A with the Dayuse conventions. This skill triggers
-  when a developer wants to "expose an agent over A2A", "publish the Agent Card", "serve
-  /.well-known/agent-card.json", or "declare the auth schemes" of an agent. Builds and
-  serves the Agent Card on /.well-known/agent-card.json, declares the securitySchemes
-  consistent with the identity provider, and signs it (JWS/JCS) via the agent-identity
-  skill's signing primitive. Suitable for the retrofit of an already-scaffolded agent.
+  Exposes an existing ADK agent over A2A with the Dayuse conventions: serves the Agent Card
+  on /.well-known/agent-card.json over https, declares the securitySchemes consistent with
+  the identity provider, and signs it (JWS/JCS) via the agent-identity skill's signing
+  primitive.
+  Use this skill when a developer wants to "expose an agent over A2A", "publish the Agent
+  Card", "serve /.well-known/agent-card.json", or "declare the auth schemes" of an agent,
+  for the retrofit of an already-scaffolded agent, or when a RemoteA2aAgent fails with
+  AgentCardResolutionError ("must use https, or http on a loopback host").
+  Do not use it to scaffold a new agent (see scaffold-agent) or to compose leaves into a
+  pipeline (see scaffold-orchestrator).
 metadata:
   version: "0.1.0"
 ---
@@ -30,6 +34,8 @@ Two paths (delegate the ADK detail to `agents-cli`):
 
 Fill in the required fields (`name`, `description`, `version`, `url`, `capabilities`, `defaultInputModes/OutputModes`, `skills`). Schema details: `references/agent-card-spec.md`. The `url` comes from an env variable (`AGENT_PUBLIC_URL`), never hard-coded.
 
+**Transport: https between agents, except on loopback (ADK ≥ 2.7).** A `RemoteA2aAgent` that fetches a card over the network refuses it unless the card URL and every RPC URL in the card use `https`, and every RPC URL shares the card URL's origin (scheme, host, port). Plain `http` is accepted only on `localhost`, `*.localhost` and loopback IPs. ADK 2.12.0 has no opt-out. So `AGENT_PUBLIC_URL` is the https origin other agents fetch the card from, never the container's internal `http://<host>:8080`. Detail and sources: `references/agent-card-spec.md` § Transport. Per target: `deploy-anywhere/references/targets.md` § A2A transport.
+
 ## Step 4 — Declare the auth schemes
 
 Declare `securitySchemes` (OpenAPI 3 style) consistent with the active identity provider:
@@ -46,6 +52,7 @@ Sign the Agent Card with `identity.sign_agent_card(card)`: JWS (RFC 7515) over t
 ## Step 6 — Verify interoperability
 
 - The card is reachable on `/.well-known/agent-card.json` and valid.
+- On the target's real network (not `localhost`), the card URL and the card's `url` are both `https` and share one origin.
 - A `RemoteA2aAgent` pointing at the URL resolves, verifies the signature, and calls the agent.
 - The declared auth schemes are actually required (an unauthenticated call is rejected).
 
@@ -57,4 +64,4 @@ Sign the Agent Card with `identity.sign_agent_card(card)`: JWS (RFC 7515) over t
 
 ## Resources
 
-- **`references/agent-card-spec.md`** — full A2A Agent Card schema, `securitySchemes` examples, and the JWS/JCS signing procedure.
+- **`references/agent-card-spec.md`** — full A2A Agent Card schema, the transport rule (https off loopback), `securitySchemes` examples, and the JWS/JCS signing procedure.

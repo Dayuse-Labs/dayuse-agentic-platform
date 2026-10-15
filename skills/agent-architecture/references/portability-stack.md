@@ -5,8 +5,8 @@ Goal: an agent that runs **anywhere** (Cloud Run, k8s/Knative, dev machine, anot
 ## Layer 1 — Model (LiteLLM)
 
 - **Rule**: the code never references a proprietary model SDK. Always `from google.adk.models.lite_llm import LiteLlm` and `Agent(model=LiteLlm(model=...))`.
-- The model (and therefore the provider) is driven by an env variable, e.g. `DAYUSE_MODEL=anthropic/claude-sonnet-4-6`. We keep Claude, but without coupling the code.
-- Provider keys come from the environment (`ANTHROPIC_API_KEY`, etc.), never hard-coded.
+- The model (and therefore the provider) is driven by an env variable, e.g. `DAYUSE_MODEL=openrouter/anthropic/claude-sonnet-5.5`. We keep Claude, but without coupling the code. Through OpenRouter the templates force zero data retention on every request; default model, route and EU options: `scaffold-agent/references/dayuse-defaults.md`.
+- Provider keys come from the environment (`OPENROUTER_API_KEY`, etc.), never hard-coded.
 - **Decision models** (System One: Jev, GPT-6 Luna Decisions, self-hosted open weights) also go through LiteLLM: `litellm.asystemone` / `litellm.adecisions`. ADK's `LiteLlm` wrapper does not cover their API shape, so they are called from code, not through `Agent(model=...)`. The id lives in `DAYUSE_DECISION_MODEL` and is **pinned** (`openrouter/typesafe/jev-1.13.0`, never `-latest` / `-preview`). Detail: `decision-models` skill.
 - **Anti-pattern**: importing a specific cloud client (`vertexai`, Bedrock SDK…) directly into the agent. If a provider requires an SDK, isolate it behind LiteLLM. Same for decision models: no `typesafe` / `openai` client in the agent.
 
@@ -25,7 +25,9 @@ Goal: an agent that runs **anywhere** (Cloud Run, k8s/Knative, dev machine, anot
 - **A2A** (agent↔agent): an orchestrator calls leaf agents via `RemoteA2aAgent` pointing at their Agent Card `/.well-known/agent-card.json`. Each leaf exposes itself via `to_a2a()` or `adk api_server --a2a`. See `wire-a2a`.
 - **MCP** (agent↔tool): an agent accesses GitLab, Notion, logs, MySQL, Elasticsearch, RabbitMQ, Sentry… via `MCPToolset`. These MCP servers are **wired into the generated agent**, not into this plugin.
 - Agent Cards declare the supported auth schemes (`securitySchemes`, OpenAPI 3 style) and can be signed (JWS / JCS). See `agent-identity`.
+- **Transport**: A2A is `https` outside loopback. Since ADK 2.7, `RemoteA2aAgent` refuses a card URL or a card `url` in plain `http` anywhere but `localhost`, and requires the card's `url` to share the card URL's origin. A platform's private hostname (`*.railway.internal`, `*.svc.cluster.local`) is not loopback. Rule and sources: `wire-a2a/references/agent-card-spec.md` § Transport; per target: `deploy-anywhere/references/targets.md`.
 - **Anti-pattern**: making two agents communicate through a proprietary bus instead of A2A, or embedding a business tool hard-coded into the orchestrator instead of going through MCP.
+- **Anti-pattern**: pointing a `RemoteA2aAgent` at `http://<svc>.<internal-domain>` because the network already encrypts (Wireguard, mesh sidecars). It works on ADK < 2.7 and breaks at the next bump: ADK checks the URL scheme, not the network.
 
 ## Layer 4 — Identity & secrets
 

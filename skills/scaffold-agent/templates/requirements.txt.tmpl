@@ -1,9 +1,15 @@
 # {{AGENT_NAME}} — dependencies. No cloud SDK by default (portability).
 # Pinned with compatible-release (~=): patches/minors OK, major blocked (supply-chain
 # security). After `pip install`, freeze a lockfile for prod: `pip freeze > requirements.lock`.
+# These ranges resolve to google-adk 2.12.x / litellm 1.105.x today. ADK >= 2.7 makes A2A
+# https-only outside loopback (wire-a2a, agent-card-spec.md § Transport). Exact versions will
+# replace the ranges once proven in dayuse-agent-fleet.
 google-adk~=2.3
 litellm~=1.90
 uvicorn~=0.49
+
+# Decision models (decision-models skill) need litellm>=1.105.0: raise the floor if this agent
+# asks one.
 
 # Pluggable identity — install according to DAYUSE_IDENTITY_PROVIDER (pin likewise):
 #   oidc-mtls : authlib, httpx
