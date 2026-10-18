@@ -8,7 +8,7 @@ description: >
   zero-lock-in overlay: one same OCI image → Cloud Run + k8s/Knative, model provider
   abstracted via LiteLLM. GCP is only a test target.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Deploy anywhere

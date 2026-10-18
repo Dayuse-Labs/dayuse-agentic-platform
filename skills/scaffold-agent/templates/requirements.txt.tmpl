@@ -4,7 +4,15 @@
 # These ranges resolve to google-adk 2.12.x / litellm 1.105.x today. ADK >= 2.7 makes A2A
 # https-only outside loopback (wire-a2a, agent-card-spec.md § Transport). Exact versions will
 # replace the ranges once proven in dayuse-agent-fleet.
-google-adk~=2.3
+# [a2a] brings a2a-sdk (to_a2a in serve.py, RemoteA2aAgent); [mcp] brings mcp (MCPToolset) and,
+# through it, starlette + sse-starlette that to_a2a's app needs. Both are extras, not core deps:
+# without them the generated agent fails at import ("No module named 'mcp'").
+google-adk[a2a,mcp]~=2.3
+# Majors capped to what dayuse-agent-fleet runs (Spike A: google-adk 2.12 + a2a-sdk 0.3.26 + mcp
+# 1.28.1, green). Uncapped, ADK 2.12 resolves a2a-sdk 1.x — whose Agent Card has no root `url`, so a
+# 0.3 RemoteA2aAgent cannot call the agent (Spike B) — and mcp 2.x. Lifted with A2A v1.0 / MCP 2.x.
+a2a-sdk>=0.3.26,<1
+mcp>=1.28,<2
 litellm~=1.90
 uvicorn~=0.49
 

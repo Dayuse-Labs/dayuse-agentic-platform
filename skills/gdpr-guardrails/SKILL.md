@@ -9,7 +9,7 @@ description: >
   Encodes: data residency in Europe (EU), token broker (no raw credentials on the agent
   side), mandatory HITL on every write, decision models that route but never approve.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # GDPR & HITL Guardrails

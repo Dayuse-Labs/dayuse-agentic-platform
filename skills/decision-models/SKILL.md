@@ -11,7 +11,7 @@ description: >
   Do not use it to generate text, to approve an external write (see gdpr-guardrails), or for
   stable categories that already have labelled data (a trained classifier does better).
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Decision models in Dayuse agents

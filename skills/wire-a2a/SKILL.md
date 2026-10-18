@@ -12,7 +12,7 @@ description: >
   Do not use it to scaffold a new agent (see scaffold-agent) or to compose leaves into a
   pipeline (see scaffold-orchestrator).
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Expose an agent over A2A

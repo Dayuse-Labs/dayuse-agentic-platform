@@ -10,7 +10,7 @@ description: >
   `adk eval` answers "Eval module is not installed".
   Do not use it for an agent's plain unit tests, which need no ADK harness.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Evaluate a Dayuse agent

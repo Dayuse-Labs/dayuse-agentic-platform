@@ -9,7 +9,7 @@ description: >
   stack, the "pluggable identity" reminder, and delegation of generic ADK matters to
   the google-agents-cli-* skills.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Dayuse agentic architecture

@@ -9,7 +9,7 @@ description: >
   value: end-to-end decomposition, reuse of existing leaves (RemoteA2aAgent), and HITL
   on the final write. For a single agent, use scaffold-agent.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Scaffold a Dayuse orchestrator
