@@ -32,7 +32,12 @@ Launch several leaves in parallel then aggregate (e.g. `tester` + `spec-evaluato
 
 ## Pattern 3 — Routing (dispatch)
 
-The orchestrator classifies the intent then routes to the right leaf (e.g. "bug" → fix flow; "doc" → writing flow). The router is an `LlmAgent` that chooses the target `AgentTool`/`RemoteA2aAgent`.
+The orchestrator classifies the intent then routes to the right leaf (e.g. "bug" → fix flow; "doc" → writing flow). Two router implementations:
+
+- **Decision model + policy in code** — preferred for a closed set of targets, once shadow-mode data supports it. One `choice` question; the target is taken in Python if `confidence >= min_confidence`, otherwise the safe branch. Same doctrine as the fleet's code-owned routers: control flow in code, never in the prompt. See `decision-models` (Pattern A).
+- **`LlmAgent` router** that chooses the target `AgentTool`/`RemoteA2aAgent` — when targets are open-ended or a rationale is needed, and as the safe branch of a decision router while it runs in shadow mode.
+
+Routing to a flow that ends in a write is fine: the write still goes through its own HITL checkpoint. A router's confidence is never an approval.
 
 ## Pattern 4 — spec ↔ eval loop
 

@@ -8,7 +8,7 @@ description: >
   LiteLLM, portable container, pluggable identity, MCP tools, and HITL on writes.
   Do not use for a multi-agent orchestrator (see scaffold-orchestrator).
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Scaffold a Dayuse leaf agent

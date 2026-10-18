@@ -7,6 +7,7 @@ delegated to agents-cli; this file applies the Dayuse defaults:
   - tools via MCP, at least privilege;
   - HITL on every write (see secrets/broker.py and the plugin's PreToolUse hook).
 """
+import json
 import os
 
 from google.adk.agents import Agent
@@ -17,7 +18,24 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnecti
 from .identity.provider import get_identity_provider
 
 # --- Model layer: LiteLLM everywhere. Switching provider = changing DAYUSE_MODEL. ---
-MODEL = LiteLlm(model=os.environ.get("DAYUSE_MODEL", "anthropic/claude-sonnet-4-6"))
+DAYUSE_MODEL = os.environ.get("DAYUSE_MODEL", "openrouter/anthropic/claude-sonnet-5.5")
+
+
+def _model_kwargs(model: str) -> dict:
+    """OpenRouter routing preferences, with zero data retention forced (gdpr-guardrails).
+
+    DAYUSE_OPENROUTER_PROVIDER_PREFS (JSON object) can add keys, e.g. pin an endpoint; it
+    cannot switch ZDR off. Malformed JSON fails at import: no silent fallback to a retaining
+    endpoint. Only openrouter/* gets the object: a direct provider would reject or ignore it,
+    and its ZDR is a contract matter (see dayuse-defaults.md).
+    """
+    if not model.startswith("openrouter/"):
+        return {}
+    prefs = json.loads(os.environ.get("DAYUSE_OPENROUTER_PROVIDER_PREFS") or "{}")
+    return {"extra_body": {"provider": {**prefs, "zdr": True}}}
+
+
+MODEL = LiteLlm(model=DAYUSE_MODEL, **_model_kwargs(DAYUSE_MODEL))
 
 # --- Identity layer: pluggable, oidc-mtls by default. ---
 identity = get_identity_provider()

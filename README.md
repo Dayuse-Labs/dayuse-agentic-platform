@@ -39,7 +39,7 @@ The plugin bundles **two documentation MCPs**: `context7` (generic ADK/A2A/MCP/L
 
 Credentials (tokens) **always** via the environment, never hard-coded. Remote servers are over HTTPS.
 
-The agents **generated** by this plugin use their own variables (documented in their `.env.example`): `DAYUSE_MODEL`, `ANTHROPIC_API_KEY`, `DAYUSE_IDENTITY_PROVIDER`, `DAYUSE_OIDC_ISSUER`, `DAYUSE_TOKEN_BROKER_URL`, `PORT`, `AGENT_PUBLIC_URL`, and the URLs of their business MCPs.
+The agents **generated** by this plugin use their own variables (documented in their `.env.example`): `DAYUSE_MODEL` (default: Claude Sonnet 5.5 through OpenRouter, zero data retention forced), `OPENROUTER_API_KEY`, `LITELLM_LOCAL_MODEL_COST_MAP`, `DAYUSE_IDENTITY_PROVIDER`, `DAYUSE_OIDC_ISSUER`, `DAYUSE_TOKEN_BROKER_URL`, `PORT`, `AGENT_PUBLIC_URL`, and the URLs of their business MCPs.
 
 ## Components
 
@@ -49,7 +49,8 @@ The agents **generated** by this plugin use their own variables (documented in t
 |---|---|
 | `agent-architecture` | Mental model: orchestrator vs A2A leaf agent, when to share/reuse, 4-layer portability stack, "pluggable identity" reminder. |
 | `agent-identity` | `AgentIdentityProvider` interface + 3 implementations: `oidc-mtls` (default), `spire`, `gcp-agent-identity` (optional). |
-| `gdpr-guardrails` | Data residency (EU), token broker / Vault, mandatory HITL on write operations. |
+| `gdpr-guardrails` | Data residency (EU), token broker / Vault, mandatory HITL on write operations, decision models that route but never approve. |
+| `decision-models` | Decision models (System One: Jev…) through LiteLLM: typed questions answered with probabilities, final branch chosen by a policy in code. |
 
 ### Skills — action (context-triggered)
 

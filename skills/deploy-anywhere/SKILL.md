@@ -8,7 +8,7 @@ description: >
   zero-lock-in overlay: one same OCI image → Cloud Run + k8s/Knative, model provider
   abstracted via LiteLLM. GCP is only a test target.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Deploy anywhere
@@ -55,7 +55,9 @@ Commands and comparison: `references/targets.md`.
 Provide the configuration via env variables / the target's secret manager:
 
 - `DAYUSE_MODEL`, `DAYUSE_IDENTITY_PROVIDER` (default `oidc-mtls`), `DAYUSE_TOKEN_BROKER_URL`, business MCP URLs, `AGENT_PUBLIC_URL`.
-- Secrets (`ANTHROPIC_API_KEY`, tokens) from the target's secret manager, **never** in the image or the committed manifest.
+- `AGENT_PUBLIC_URL` is the **https** origin other agents fetch the card from, and every `*_CARD_URL` an orchestrator reads is https too: ADK ≥ 2.7 refuses plain http outside loopback, internal hostnames included. How each target provides https: `references/targets.md` § A2A transport.
+- `LITELLM_LOCAL_MODEL_COST_MAP=True`: LiteLLM uses the cost map bundled with the installed package instead of downloading it. Without it and without network, litellm 1.105.1 retried that download at import (Spike A, 2026-10-14). Detail: `scaffold-agent/references/dayuse-defaults.md`.
+- Secrets (`OPENROUTER_API_KEY`, tokens) from the target's secret manager, **never** in the image or the committed manifest.
 - **EU** region for data residency.
 
 ## Step 6 — Invariants
@@ -70,5 +72,5 @@ Deployment is a sensitive operation: confirm (HITL) before an `apply`/`replace` 
 
 ## Resources
 
-- **`references/targets.md`** — Cloud Run vs k8s/Knative commands, the "same image" principle, the GCP test-only posture.
+- **`references/targets.md`** — Cloud Run vs k8s/Knative commands, the "same image" principle, the GCP test-only posture, and the A2A transport (https) per target, Railway included.
 - **`templates/service.cloudrun.yaml.tmpl`**, **`templates/service.knative.yaml.tmpl`**.

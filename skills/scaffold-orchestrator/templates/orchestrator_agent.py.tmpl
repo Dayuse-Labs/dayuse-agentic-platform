@@ -7,6 +7,7 @@ reimplements a leaf's logic: it composes it.
 If the signature of RemoteA2aAgent / SequentialAgent differs in the installed
 ADK version, confirm via agents-cli / Context7.
 """
+import json
 import os
 
 from google.adk.agents import SequentialAgent
@@ -15,12 +16,33 @@ from google.adk.models.lite_llm import LiteLlm
 
 from .identity.provider import get_identity_provider
 
-# --- Model (LiteLLM) & pluggable identity (oidc-mtls by default). ---
-MODEL = LiteLlm(model=os.environ.get("DAYUSE_MODEL", "anthropic/claude-sonnet-4-6"))
+# --- Model (LiteLLM). Same helper as scaffold-agent's agent.py.tmpl. ---
+DAYUSE_MODEL = os.environ.get("DAYUSE_MODEL", "openrouter/anthropic/claude-sonnet-5.5")
+
+
+def _model_kwargs(model: str) -> dict:
+    """OpenRouter routing preferences, with zero data retention forced (gdpr-guardrails).
+
+    DAYUSE_OPENROUTER_PROVIDER_PREFS (JSON object) can add keys, e.g. pin an endpoint; it
+    cannot switch ZDR off. Malformed JSON fails at import: no silent fallback to a retaining
+    endpoint. Only openrouter/* gets the object: a direct provider would reject or ignore it,
+    and its ZDR is a contract matter (see dayuse-defaults.md).
+    """
+    if not model.startswith("openrouter/"):
+        return {}
+    prefs = json.loads(os.environ.get("DAYUSE_OPENROUTER_PROVIDER_PREFS") or "{}")
+    return {"extra_body": {"provider": {**prefs, "zdr": True}}}
+
+
+MODEL = LiteLlm(model=DAYUSE_MODEL, **_model_kwargs(DAYUSE_MODEL))
+
+# --- Pluggable identity (oidc-mtls by default). ---
 identity = get_identity_provider()
 
 # --- REUSED A2A leaves (deployed once, shared). ---
 # The URL points at the leaf's Agent Card: .../.well-known/agent-card.json.
+# https outside loopback: ADK >= 2.7 refuses http elsewhere (internal hostnames included) and
+# requires the card's own url to share this origin. See wire-a2a/references/agent-card-spec.md.
 # The orchestrator authenticates via identity.get_outbound_credentials(<leaf>).
 spec_generator = RemoteA2aAgent(
     name="spec_generator",

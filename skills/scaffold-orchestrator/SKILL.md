@@ -9,7 +9,7 @@ description: >
   value: end-to-end decomposition, reuse of existing leaves (RemoteA2aAgent), and HITL
   on the final write. For a single agent, use scaffold-agent.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Scaffold a Dayuse orchestrator
@@ -28,7 +28,7 @@ Check for the presence of the `agents-cli` skills (generic ADK skeleton). If the
 
 For **each capability**, consult the **leaf-agent registry**: read `agents-registry.yaml` at the platform repo root (schema + bootstrap in `references/reuse-registry.md`; seed template at `${CLAUDE_PLUGIN_ROOT}/skills/scaffold-orchestrator/templates/agents-registry.yaml.tmpl`). If it does not exist yet, create it from that template (empty list — the ecosystem is empty on day one), then:
 
-1. **An equivalent leaf already exists** → **reuse** it: declare a `RemoteA2aAgent` pointing at its Agent Card URL (`.../.well-known/agent-card.json`). **Regenerate nothing.**
+1. **An equivalent leaf already exists** → **reuse** it: declare a `RemoteA2aAgent` pointing at its Agent Card URL (`.../.well-known/agent-card.json`), in `https` outside loopback (see Step 5). **Regenerate nothing.**
 2. **No leaf, but ≥ 2 sharing criteria met** (see `agent-architecture`) → scaffold a **new leaf** with `scaffold-agent`, deploy it, register it in the registry, then reference it.
 3. **Otherwise** → keep the logic **inline** in the orchestrator (local ADK sub-agent).
 
@@ -45,6 +45,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/skills/scaffold-orchestrator/templates/orchestrator_
 ## Step 5 — Identity & guardrails
 
 - **Authenticated A2A**: the orchestrator obtains its outbound credentials via `identity.get_outbound_credentials(audience)` for each leaf; the leaves validate via `verify_inbound`. See `agent-identity`.
+- **https between agents**: every `*_CARD_URL` the orchestrator reads is `https` outside loopback, platform-internal hostnames included (`*.railway.internal`, `*.svc.cluster.local`). ADK ≥ 2.7 fails the first delegation with `AgentCardResolutionError` otherwise, and the leaf's card must advertise a `url` with the same origin. Rule and sources: `wire-a2a/references/agent-card-spec.md` § Transport; per target: `deploy-anywhere/references/targets.md` § A2A transport.
 - **HITL**: the final write (MR/issue/Notion) is isolated in a dedicated leaf (e.g. `mr_writer`) and triggers human confirmation. Design the pipeline so the write is the **last** step, a single control point.
 - **GDPR**: data minimization between steps, EU residency. See `gdpr-guardrails`.
 

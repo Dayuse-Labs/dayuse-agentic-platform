@@ -7,10 +7,24 @@ If the to_a2a import differs in the installed ADK version, confirm the path via
 agents-cli / Context7. Alternative: `adk api_server --a2a` with the provided agent-card.json.
 """
 import os
+from urllib.parse import urlparse
 
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
 
 from {{AGENT_NAME}}.agent import root_agent
 
-# Listens on $PORT (default 8080): required by Cloud Run, compatible with k8s/Knative.
-app = to_a2a(root_agent, port=int(os.environ.get("PORT", "8080")))
+# uvicorn listens on $PORT (Dockerfile CMD, default 8080): required by Cloud Run, compatible
+# with k8s/Knative. to_a2a's host/port/protocol only shape the url the card advertises.
+PORT = int(os.environ.get("PORT", "8080"))
+
+# The card advertises AGENT_PUBLIC_URL, the https origin other agents fetch the card from:
+# ADK >= 2.7 refuses an http card url outside loopback, and one on another origin than the
+# card URL (wire-a2a/references/agent-card-spec.md § Transport). Unset = local development.
+# Origin only: a path in AGENT_PUBLIC_URL is ignored (to_a2a serves at the root).
+_public = urlparse(os.environ.get("AGENT_PUBLIC_URL") or f"http://localhost:{PORT}")
+app = to_a2a(
+    root_agent,
+    host=_public.hostname,
+    port=_public.port or (443 if _public.scheme == "https" else 80),
+    protocol=_public.scheme,
+)
